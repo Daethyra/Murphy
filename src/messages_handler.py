@@ -19,7 +19,7 @@ LANGCHAIN_TRACING_V2 = os.getenv('LANGCHAIN_TRACING_V2')
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-# Using Client>Bot because there are no commands to create
+# Using discord.Client>discord.Bot because there are no commands to create
 client = discord.Client(intents=intents)
 
 
@@ -31,7 +31,7 @@ async def on_ready():
 
 
 @client.event
-async def on_message(message):
+async def on_message(message: discord.Message) -> None:
     """
     An event handler that is triggered whenever a message is received.
 
@@ -56,19 +56,14 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         logging.info("\n----------\n\nMessage contains $hello.")
 
-        # Extract the message text after '$hello'
-        user_prompt = message.content[len('$hello'):].strip()
+        user_prompt: str = message.content[len('$hello'):].strip()
         logging.info("\n\nStripped user's message content. \n\n" + str(user_prompt))
 
-        # Default message if no text is provided
-        default_message = 'Hello! How can I assist you today?'
+        default_message: str = 'Hello! How can I assist you today?'
 
         if user_prompt:
-          
-            # Use `.format` to pass in the user's prompt
-            prompt = prompt_template.format(user_prompt=user_prompt)
-            # Pass the user's prompt for generation
-            response = chain.invoke({"user_prompt": prompt})
+            prompt: str = prompt_template.format(user_prompt=user_prompt)
+            response: str = chain.invoke({"user_prompt": prompt})
 
             # Send the response once available
             await message.channel.send(response)
@@ -77,7 +72,7 @@ async def on_message(message):
         else:
             # Send default message
             await message.channel.send(default_message)
-            logging.info("Sent default message.")
+            logging.info("Sent default message.\n\n--------------\n")
 
 try:
     client.run(CURRENCY_BOT_TOKEN)
