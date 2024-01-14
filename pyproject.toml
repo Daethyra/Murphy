@@ -1,0 +1,25 @@
+[project]
+name = "currency-bot"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Daethyra", email = "109057945+Daethyra@users.noreply.github.com"},
+]
+dependencies = [
+    "numpy>=1.26.3",
+    "flask>=3.0.0",
+    "urllib3>=2.1.0",
+    "discord>=2.3.2",
+    "discord-py>=2.3.2",
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.2.post1",
+    "openai>=1.7.2",
+    "pydantic>=2.5.3",
+]
+requires-python = "==3.12.*"
+readme = "README.md"
+license = {text = "GNU AGPL"}
+
+
+[tool.pdm]
+package-type = "application"
