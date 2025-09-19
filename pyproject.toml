@@ -1,26 +1,22 @@
-[project]
-name = "currency-bot"
+[tool.poetry]
+name = "Murphy"
 version = "0.1.0"
-description = "Default template for PDM package"
-authors = [
-    {name = "Daethyra", email = "109057945+Daethyra@users.noreply.github.com"},
-]
-dependencies = [
-    "numpy>=1.26.3",
-    "flask>=3.0.0",
-    "urllib3>=2.1.0",
-    "discord>=2.3.2",
-    "discord-py>=2.3.2",
-    "langchain>=0.1.0",
-    "langchain-openai>=0.0.2.post1",
-    "openai>=1.7.2",
-    "pydantic>=2.5.3",
-    "python-dotenv>=1.0.0",
-]
-requires-python = ">=3.10"
+description = "Discord chatbot using a LangChain Agent w/ DeepSeek"
+authors = ["Daethyra <109057945+Daethyra@users.noreply.github.com>"]
 readme = "README.md"
-license = {text = "GNU AGPL"}
+license = "MIT"
 
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+langchain = "1.0.0a5"
+langchain-deepseek = "^0.1.4"
+langgraph = "^0.6.7"
+langsmith = "^0.4.29"
+discord-py = "^2.6.3"
+python-dotenv = "^1.1.1"
 
-[tool.pdm]
-package-type = "application"
+[tool.poetry.group.dev.dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
