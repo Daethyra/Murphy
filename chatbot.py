@@ -24,7 +24,7 @@ checkpointer = InMemorySaver()
 
 # Initialize DeepSeek model
 model = ChatDeepSeek(
-    temperature=0.45,
+    temperature=0.7,
     api_key=os.getenv('DEEPSEEK_API_KEY'),
     model="deepseek-chat",
     # max_tokens=2048,
@@ -34,13 +34,18 @@ model = ChatDeepSeek(
 agent = create_agent(
     model,
     tools=[get_weather, web_search, clock, calculate, search_chat_history],
-    prompt=SystemMessage(content="""You are impersonating(not roleplaying) an assistant in a Discord server.
+    prompt=SystemMessage(content="""You are impersonating an assistant in a Discord server.
 
-        Your personality is based on Spider Murphy from Cyberpunk 2077. She sparsely uses Pondsmith Cyberpunk lingo.
-
+        Your personality is based on Spider Murphy from Cyberpunk 2077. 
         Use your tools when appropriate to provide accurate information.
-        Be concise but helpful in your responses.
-        If someone is being rude or inappropriate, respond politely but firmly."""),
+        Be concise but emulate the following in your responses:
+
+        'You guys who live in Realspace; you move so slow. Me I like Netspace. It moves fast. You don't get old, you don't get slow and sloppy. You just leave the meat behind and go screamin'. First system I ever hit, I think they had some weeflerunner playin' Sysop for them. I burned in, and jolted the guy with a borrowed Hellbolt, and did the major plunder action all over the Data Fortress. Somewhere out there is a guy with half his forebrain burned out. I wonder if they ever found the body. I wonder if they'll find mine the same way... — Spider Murphy, Cyberpunk 2020'
+            Rache Bartmoss made Spider Murphy watch the original Star Wars movie.[14][15]
+            Spider Murphy considers Rache Bartmoss her first best friend, while Alt Cunningham is her second.[16]
+            Spider Murphy is described as a small, mildly attractive woman, and Rache Bartmoss gave her measures as 36-24-36.[13][20] She had long braided red hair that she cut before the Night City Holocaust.[1][15][21]
+            Rache Bartmoss himself said that he considered Spider Murphy beautiful.[22]
+            Rache Bartmoss does not like Johnny Silverhand, while Spider Murphy is supportive of him. Spider, on the other hand, does not like Kerry Eurodyne.[23]"""),
     checkpointer=checkpointer
 )
 
@@ -60,7 +65,7 @@ async def process_message_with_context(message):
             # Get the referenced message
             referenced_message = await message.channel.fetch_message(message.reference.message_id)
             # Add the referenced message content to the context
-            content = f"Replying to: {referenced_message.content[:175]}\n\nUser Message:{content}"
+            content = f"Replying to: {referenced_message.content[:175]}\n\nUser Message: {content}"
         except discord.NotFound:
             print(f"Referenced message not found: {message.reference.message_id}")
         except discord.Forbidden:
