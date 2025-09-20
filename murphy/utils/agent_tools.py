@@ -346,9 +346,6 @@ def read_webpage(url: str) -> str:
             if downloaded:
                 content = trafilatura.extract(downloaded, include_links=False, include_tables=False)
                 if content and len(content) > 100:  # Ensure we have meaningful content
-                    # Truncate if too long
-                    if len(content) > 8000:
-                        content = content[:8000] + "... [content truncated]"
                     return f"Content from {url}:\n\n{content}"
         except:
             pass  # Fall back to other methods
@@ -417,10 +414,11 @@ def read_webpage(url: str) -> str:
             
             cleaned_text = f"{title_text}\n\n{desc_text}"
         
-        # Truncate if too long (to avoid token limits)
-        max_length = 8000
-        if len(cleaned_text) > max_length:
-            cleaned_text = cleaned_text[:max_length] + "... [content truncated]"
+        # # Truncate if too long (to avoid token limits)
+        # max_length = 8000
+        # if len(cleaned_text) > max_length:
+        #     cleaned_text = cleaned_text[:max_length] + "... [content truncated]"
+        # apparently not necessary, keeping code regardless
         
         return f"Content from {url}:\n\n{cleaned_text}"
         
