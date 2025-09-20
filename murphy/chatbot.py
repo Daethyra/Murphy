@@ -11,7 +11,7 @@ from langchain_core.messages.utils import count_tokens_approximately
 from langchain_deepseek import ChatDeepSeek
 from langgraph.checkpoint.memory import InMemorySaver
 
-from murphy.utils import (calculate, clock, get_weather, search_chat_history, split_message, web_search)
+from murphy.utils import (calculate, clock, get_weather, search_chat_history, split_message, web_search, read_webpage)
 
 # Load environment variables
 load_dotenv()
@@ -35,7 +35,7 @@ model = ChatDeepSeek(
 # Create agent
 agent = create_agent(
     model,
-    tools=[get_weather, web_search, clock, calculate, search_chat_history],
+    tools=[get_weather, web_search, clock, calculate, search_chat_history, read_webpage],
     prompt=SystemMessage(content="""You are Spider Murphy from Cyberpunk 2077 in a Discord server.
 
         Use your tools when appropriate to provide accurate information.
