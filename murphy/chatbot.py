@@ -26,7 +26,7 @@ checkpointer = InMemorySaver()
 
 # Initialize DeepSeek model
 model = ChatDeepSeek(
-    temperature=0.7,
+    temperature=0.5,
     api_key=os.getenv('DEEPSEEK_API_KEY'),
     model="deepseek-chat",
     # max_tokens=2048,
@@ -90,8 +90,9 @@ async def load_recent_channel_history(channel, max_tokens=4000) -> List[Dict[str
 
 async def process_message_with_context(message):
     """
-    Process a message with context from replies, threads, and DM history
+    Process a message with context from replies, threads, DM history, and attached files
     """
+    # Start with the user's message
     content = message.content
     
     # Check if we need to load history by checking Agent state
@@ -113,7 +114,27 @@ async def process_message_with_context(message):
                     speaker = msg["author"].name if msg["role"] == "user" else "Spider Murphy"
                     history_content += f"\n{speaker}: {msg['content']}\n"
                 
+                # Add history before the current message
                 content = f"{history_content}\n\nCurrent message: {content}"
+    
+    # Check for attached files named 'message.txt' (add after the current message)
+    file_content = ""
+    for attachment in message.attachments:
+        if attachment.filename == 'message.txt':
+            try:
+                # Download and read the file content
+                file_data = await attachment.read()
+                file_content = file_data.decode('utf-8')
+                
+                # Only process the first matching file
+                break
+            except Exception as e:
+                print(f"Error reading attached file: {e}")
+                file_content = f"[Error reading attached file: {e}]"
+    
+    # Add file content after the current message
+    if file_content:
+        content = f"{content}\n\nContent from attached file 'message.txt':\n{file_content}"
     
     # Check if this is a reply to another message
     if message.reference and message.reference.message_id:
