@@ -8,7 +8,7 @@ from langchain_core.tools import tool
 from serpapi import GoogleSearch
 from typing_extensions import Annotated
 
-from utilityfuncs import format_weather_data
+from .utilityfuncs import format_weather_data
 
 
 # Agent Tools

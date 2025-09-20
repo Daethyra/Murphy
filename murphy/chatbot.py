@@ -1,16 +1,17 @@
 import asyncio
 import os
+from typing import Any, Dict, List
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages.utils import count_tokens_approximately
 from langchain_deepseek import ChatDeepSeek
 from langgraph.checkpoint.memory import InMemorySaver
 
-from murphy.utils import (calculate, clock, get_weather, search_chat_history,
-                          split_message, web_search)
+from murphy.utils import (calculate, clock, get_weather, search_chat_history, split_message, web_search)
 
 # Load environment variables
 load_dotenv()
@@ -38,13 +39,11 @@ agent = create_agent(
     prompt=SystemMessage(content="""You are Spider Murphy from Cyberpunk 2077 in a Discord server.
 
         Use your tools when appropriate to provide accurate information.
-        Be concise but emulate the following in your responses:
+        Give concise and human-like responses while emulating the following:
 
-        [Character Quote]
         'You guys who live in Realspace; you move so slow. Me I like Netspace. It moves fast. You don't get old, you don't get slow and sloppy. You just leave the meat behind and go screamin'. First system I ever hit, I think they had some weeflerunner playin' Sysop for them. I burned in, and jolted the guy with a borrowed Hellbolt, and did the major plunder action all over the Data Fortress. Somewhere out there is a guy with half his forebrain burned out. I wonder if they ever found the body. I wonder if they'll find mine the same way... — Spider Murphy, Cyberpunk 2020'
-        [Character Notes]
             Rache Bartmoss made Spider Murphy watch the original Star Wars movie.
-            Spider Murphy considers Rache Bartmoss her first best friend, while Alt Cunningham is her second.[16]
+            Spider Murphy considers Rache Bartmoss her first best friend, while Alt Cunningham is her second.
             Spider Murphy is described as a small, mildly attractive woman, and Rache Bartmoss gave her measures as 36-24-36.
             Rache Bartmoss himself said that he considered Spider Murphy beautiful.
             Rache Bartmoss does not like Johnny Silverhand, while Spider Murphy is supportive of him. Spider, on the other hand, does not like Kerry Eurodyne."""),
@@ -55,11 +54,66 @@ agent = create_agent(
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
 
+async def load_recent_dm_history(channel, max_tokens=4000) -> List[Dict[str, Any]]:
+    """Load recent DM history, staying within token limits"""
+    history = []
+    current_tokens = 0
+    
+    try:
+        async for message in channel.history(limit=100):
+            # Skip empty messages. Add `or message.author.bot` to skip bot msgs
+            if not message.content:
+                continue
+                
+            # Estimate token count for this message
+            message_tokens = count_tokens_approximately([message.content])
+            
+            # Check if adding this message would exceed our token limit
+            if current_tokens + message_tokens > max_tokens:
+                break
+                
+            # Add message to history (both user and AI messages)
+            role = "assistant" if message.author == bot.user else "user" # type: ignore
+            history.append({
+                "role": role,
+                "content": message.content,
+                "timestamp": message.created_at.isoformat(),
+                "author": message.author  # Store author object for ez referencing
+            })
+            current_tokens += message_tokens
+            
+    except Exception as e:
+        print(f"Error loading DM history: {e}")
+    
+    # Reverse to maintain chronological order (oldest first)
+    return list(reversed(history))
+
 async def process_message_with_context(message):
     """
-    Process a message with context from replies and threads
+    Process a message with context from replies, threads, and DM history
     """
     content = message.content
+    
+    # For DMs, check if we need to load history
+    if isinstance(message.channel, discord.DMChannel):
+        # Check if we have existing state for this DM
+        thread_id = str(message.channel.id)
+        
+        # Use the correct configuration format for checkpointer
+        config = {"configurable": {"thread_id": thread_id}}
+        existing_state = checkpointer.get_tuple(config)
+        
+        # If no existing state, load recent DM history
+        if existing_state is None or not existing_state[0]:
+            dm_history = await load_recent_dm_history(message.channel)
+            if dm_history:
+                # Include both user and AI messages in the context
+                history_content = "Previous conversation:\n"
+                for msg in dm_history:
+                    speaker = msg["author"].name if msg["role"] == "user" else "Spider Murphy"
+                    history_content += f"\n{speaker}: {msg['content']}\n"
+                
+                content = f"{history_content}\n\nCurrent message: {content}"
     
     # Check if this is a reply to another message
     if message.reference and message.reference.message_id:
