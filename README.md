@@ -1,6 +1,8 @@
 # 🕷️ Spider Murphy - Discord AI Agent
 
-**LangChain Discord Agent**
+![Spider Murphy](./assets/spider-murphy.jpeg)
+
+**Flexible LangChain Agent**
 
 ## Overview
 
@@ -10,8 +12,7 @@ Spider Murphy is a sophisticated Discord AI agent that embodies the iconic netru
 
 ### 🤖 **AI Personality & Character**
 - **Authentic Spider Murphy persona** from Cyberpunk 2077 lore
-- **Rich backstory integration**: Rache Bartmoss, Alt Cunningham, Johnny Silverhand references
-- **Cyberpunk-themed responses** with netrunner jargon and attitude
+- **Cyberpunk-themed responses** with netrunner jargon and attitude (wow it got old fast!)
 - **Context-aware conversations** with memory persistence
 
 ### 🛠️ **Agent Tools & Capabilities**
