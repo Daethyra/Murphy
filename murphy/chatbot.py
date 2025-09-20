@@ -26,7 +26,7 @@ checkpointer = InMemorySaver()
 
 # Initialize DeepSeek model
 model = ChatDeepSeek(
-    temperature=0.5,
+    temperature=0.67,
     api_key=os.getenv('DEEPSEEK_API_KEY'),
     model="deepseek-chat",
     # max_tokens=2048,
