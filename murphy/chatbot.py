@@ -54,8 +54,8 @@ agent = create_agent(
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
 
-async def load_recent_dm_history(channel, max_tokens=4000) -> List[Dict[str, Any]]:
-    """Load recent DM history, staying within token limits"""
+async def load_recent_channel_history(channel, max_tokens=4000) -> List[Dict[str, Any]]:
+    """Load recent channel history, staying within token limits"""
     history = []
     current_tokens = 0
     
@@ -83,7 +83,7 @@ async def load_recent_dm_history(channel, max_tokens=4000) -> List[Dict[str, Any
             current_tokens += message_tokens
             
     except Exception as e:
-        print(f"Error loading DM history: {e}")
+        print(f"Error loading channel history: {e}")
     
     # Reverse to maintain chronological order (oldest first)
     return list(reversed(history))
@@ -94,22 +94,22 @@ async def process_message_with_context(message):
     """
     content = message.content
     
-    # For DMs, check if we need to load history
-    if isinstance(message.channel, discord.DMChannel):
-        # Check if we have existing state for this DM
+    # Check if we need to load history by checking Agent state
+    if isinstance(message.channel, (discord.DMChannel, discord.TextChannel, discord.Thread)):
+        # Check if we have existing state for this channel
         thread_id = str(message.channel.id)
         
         # Use the correct configuration format for checkpointer
         config = {"configurable": {"thread_id": thread_id}}
         existing_state = checkpointer.get_tuple(config)
         
-        # If no existing state, load recent DM history
+        # If no existing state, load recent channel history
         if existing_state is None or not existing_state[0]:
-            dm_history = await load_recent_dm_history(message.channel)
-            if dm_history:
+            channel_history = await load_recent_channel_history(message.channel)
+            if channel_history:
                 # Include both user and AI messages in the context
                 history_content = "Previous conversation:\n"
-                for msg in dm_history:
+                for msg in channel_history:
                     speaker = msg["author"].name if msg["role"] == "user" else "Spider Murphy"
                     history_content += f"\n{speaker}: {msg['content']}\n"
                 
