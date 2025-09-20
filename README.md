@@ -1,8 +1,6 @@
-*data streams analyze the codebase and generate comprehensive documentation*
-
 # 🕷️ Spider Murphy - Discord AI Agent
 
-**Netspace-Powered Discord Assistant with Cyberpunk 2077 Personality**
+**LangChain Discord Agent**
 
 ## Overview
 
