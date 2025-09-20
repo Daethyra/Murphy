@@ -2,11 +2,15 @@ import math
 import os
 import re
 from datetime import datetime
+from urllib.parse import urlparse
 
+import requests
+from bs4 import BeautifulSoup
 from langchain.agents.tool_node import InjectedState
 from langchain_core.tools import tool
 from serpapi import GoogleSearch
 from typing_extensions import Annotated
+import trafilatura
 
 from .utilityfuncs import format_weather_data
 
@@ -15,7 +19,7 @@ from .utilityfuncs import format_weather_data
 @tool
 def get_weather(location: str) -> str:
     """Get current weather information for a specific location.
-    Example: "portland oregon", "new york", "london uk"
+    Example: "portland oregon", "new york", "los angeles"
     """
     try:
         params = {
@@ -40,7 +44,7 @@ def get_weather(location: str) -> str:
 
 @tool
 def web_search(query: str) -> str:
-    """Search the web using Google. Pass in the query you want to search. You can use anything that you would use in a regular Google search. e.g. inurl:, site:, intitle:. 
+    """Retrieve an AI overview of a search query to Google. You can use anything that you would use in a regular Google search. e.g. inurl:, site:, intitle:. 
     """
     try:
         params = {
@@ -99,17 +103,8 @@ def search_chat_history(
     keyword_lookup: str,
     chat_history: Annotated[list, InjectedState("messages")]
 ) -> str:
-    """Search through conversation history using advanced query operators.
-    
-    Use this tool when you need to find specific messages in the chat history.
-    Supports boolean operators (AND, OR, NOT), role filtering (user:, assistant:),
-    exact phrases (quotes), wildcards (*), and date filters (after:, before:, on:).
-    
-    Args:
-        keyword_lookup: Search query with optional operators
-        
-    Returns:
-        Formatted results of matching messages with context
+    """Search through conversation history using advanced query operators to find specific messages in the chat history.
+    Supports boolean operators (AND, OR, NOT), role filtering (user:, assistant:), exact phrases (quotes), wildcards (*), and date filters (after:, before:, on:).
     """
     try:
         # Convert LangChain message objects to dictionary format
@@ -323,3 +318,113 @@ def search_chat_history(
         
     except Exception as e:
         return f"Error searching chat history: {str(e)}"
+
+@tool
+def read_webpage(url: str) -> str:
+    """Use when you need to directly read a webpage. Directly enter the URL to retrieve the page's main contents. Use repeatedly when given a direct link/list of URLs.
+    """
+    try:
+        # Validate URL format
+        parsed_url = urlparse(url)
+        if not all([parsed_url.scheme, parsed_url.netloc]):
+            return "Error: Invalid URL format. Please provide a complete URL with http:// or https://"
+        
+        # Set headers to mimic a browser
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        # Fetch the webpage
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        
+        # Try multiple extraction methods
+        
+        # Method 1: Use trafilatura (more robust content extraction)
+        try:
+            downloaded = trafilatura.fetch_url(url)
+            if downloaded:
+                content = trafilatura.extract(downloaded, include_links=False, include_tables=False)
+                if content and len(content) > 100:  # Ensure we have meaningful content
+                    # Truncate if too long
+                    if len(content) > 8000:
+                        content = content[:8000] + "... [content truncated]"
+                    return f"Content from {url}:\n\n{content}"
+        except:
+            pass  # Fall back to other methods
+        
+        # Method 2: Use BeautifulSoup with less aggressive filtering
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Remove obviously unwanted elements
+        for element in soup(['script', 'style', 'nav', 'footer', 'aside', 
+                            'header', 'form', 'iframe', 'button', 'input']):
+            element.decompose()
+        
+        # Try to find the main content area with less specific selectors
+        content_selectors = [
+            'article', 'main', '[role="main"]', 
+            '.content', '#content', '.main-content',
+            '.post-content', '.entry-content', '.article-body',
+            'div', 'section'  # More generic selectors as fallback
+        ]
+        
+        main_content = None
+        for selector in content_selectors:
+            elements = soup.select(selector)
+            if elements:
+                # Find the element with the most text content
+                elements.sort(key=lambda x: len(x.get_text()), reverse=True)
+                main_content = elements[0]
+                break
+        
+        # If no specific content area found, use the body but remove more clutter
+        if not main_content:
+            main_content = soup.body if soup.body else soup
+            
+            # Remove more potential clutter from body
+            clutter_selectors = [
+                '[class*="ad"]', '[id*="ad"]', 
+                '[class*="banner"]', '[id*="banner"]',
+                '[class*="popup"]', '[id*="popup"]',
+                '[class*="modal"]', '[id*="modal"]',
+                '[class*="cookie"]', '[id*="cookie"]',
+                '[class*="newsletter"]', '[id*="newsletter"]',
+                '.social-share', '.share-buttons',
+                '.comments', '#comments',
+                'nav', 'footer', 'header', 'aside'
+            ]
+            
+            for selector in clutter_selectors:
+                for element in main_content.select(selector):
+                    element.decompose()
+        
+        # Extract text and clean it up
+        text = main_content.get_text(separator='\n', strip=True)
+        
+        # Remove excessive whitespace and empty lines
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        cleaned_text = '\n'.join(lines)
+        
+        # If we still don't have meaningful content, try a different approach
+        if len(cleaned_text) < 100:
+            # Try to get at least the title and meta description
+            title = soup.find('title')
+            title_text = title.get_text() if title else "No title found"
+            
+            meta_desc = soup.find('meta', attrs={'name': 'description'})
+            desc_text = meta_desc['content'] if meta_desc and 'content' in meta_desc.attrs else "No description found"
+            
+            cleaned_text = f"{title_text}\n\n{desc_text}"
+        
+        # Truncate if too long (to avoid token limits)
+        max_length = 8000
+        if len(cleaned_text) > max_length:
+            cleaned_text = cleaned_text[:max_length] + "... [content truncated]"
+        
+        return f"Content from {url}:\n\n{cleaned_text}"
+        
+    except requests.exceptions.RequestException as e:
+        return f"Error fetching the webpage: {str(e)}"
+    except Exception as e:
+        return f"Error processing the webpage: {str(e)}"
