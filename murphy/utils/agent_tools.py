@@ -8,25 +8,10 @@ from langchain_core.tools import tool
 from serpapi import GoogleSearch
 from typing_extensions import Annotated
 
+from utilityfuncs import format_weather_data
 
-# First, create the output formatting function
-def format_weather_data(text_blocks):
-    """Format the weather data from text_blocks into a readable string"""
-    formatted_text = ""
-    
-    for block in text_blocks:
-        if block["type"] == "paragraph":
-            formatted_text += f"{block['snippet']}\n\n"
-        elif block["type"] == "heading":
-            formatted_text += f"--- {block['snippet']} ---\n"
-        elif block["type"] == "list" and "list" in block:
-            for item in block["list"]:
-                formatted_text += f"• {item['snippet']}\n"
-            formatted_text += "\n"
-    
-    return formatted_text.strip()
 
-# Define the tool using the langchain decorator
+# Agent Tools
 @tool
 def get_weather(location: str) -> str:
     """Get current weather information for a specific location.
@@ -338,16 +323,3 @@ def search_chat_history(
         
     except Exception as e:
         return f"Error searching chat history: {str(e)}"
-
-def split_message(message, max_length=2000):
-    """Split a message into chunks that fit within Discord's character limit"""
-    if len(message) <= max_length:
-        return [message]
-    
-    # Simple approach: split into chunks of max_length
-    chunks = []
-    for i in range(0, len(message), max_length):
-        chunk = message[i:i+max_length]
-        chunks.append(chunk)
-    
-    return chunks
