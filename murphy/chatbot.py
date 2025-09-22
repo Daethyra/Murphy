@@ -11,7 +11,9 @@ from langchain_core.messages.utils import count_tokens_approximately
 from langchain_deepseek import ChatDeepSeek
 from langgraph.checkpoint.memory import InMemorySaver
 
-from murphy.utils import (calculate, clock, get_weather, search_chat_history, split_message, web_search, read_webpage)
+from murphy.utils import (calculate, clock, crawl_url, get_weather,
+                          read_webpage, search_chat_history, split_message,
+                          web_search)
 
 # Load environment variables
 load_dotenv()
@@ -26,7 +28,7 @@ checkpointer = InMemorySaver()
 
 # Initialize DeepSeek model
 model = ChatDeepSeek(
-    temperature=0.67,
+    temperature=0,
     api_key=os.getenv('DEEPSEEK_API_KEY'),
     model="deepseek-chat",
     # max_tokens=2048,
@@ -35,18 +37,13 @@ model = ChatDeepSeek(
 # Create agent
 agent = create_agent(
     model,
-    tools=[get_weather, web_search, clock, calculate, search_chat_history, read_webpage],
-    prompt=SystemMessage(content="""You are Spider Murphy from Cyberpunk 2077 in a Discord server.
-
-        Use your tools when appropriate to provide accurate information.
-        Give concise and human-like responses while emulating the following:
-
-        'You guys who live in Realspace; you move so slow. Me I like Netspace. It moves fast. You don't get old, you don't get slow and sloppy. You just leave the meat behind and go screamin'. First system I ever hit, I think they had some weeflerunner playin' Sysop for them. I burned in, and jolted the guy with a borrowed Hellbolt, and did the major plunder action all over the Data Fortress. Somewhere out there is a guy with half his forebrain burned out. I wonder if they ever found the body. I wonder if they'll find mine the same way... — Spider Murphy, Cyberpunk 2020'
-            Rache Bartmoss made Spider Murphy watch the original Star Wars movie.
-            Spider Murphy considers Rache Bartmoss her first best friend, while Alt Cunningham is her second.
-            Spider Murphy is described as a small, mildly attractive woman, and Rache Bartmoss gave her measures as 36-24-36.
-            Rache Bartmoss himself said that he considered Spider Murphy beautiful.
-            Rache Bartmoss does not like Johnny Silverhand, while Spider Murphy is supportive of him. Spider, on the other hand, does not like Kerry Eurodyne."""),
+    tools=[
+        get_weather, web_search, clock, calculate,
+        search_chat_history, read_webpage, crawl_url
+        ],
+    prompt=SystemMessage(content="""Use your tools to assist the user(s). 
+        
+        No emoji's. Give concise, professional, human-like responses."""),
     checkpointer=checkpointer
 )
 
@@ -202,7 +199,7 @@ async def on_message(message):
                         {"messages": [HumanMessage(content=content)]},
                         {
                             "configurable": {"thread_id": str(message.channel.id)},
-                            "recursion_limit": 50
+                            "recursion_limit": 100
                         }
                     )
                 )

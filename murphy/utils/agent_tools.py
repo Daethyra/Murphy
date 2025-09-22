@@ -11,6 +11,7 @@ from langchain_core.tools import tool
 from serpapi import GoogleSearch
 from typing_extensions import Annotated
 import trafilatura
+from trafilatura.spider import focused_crawler
 
 from .utilityfuncs import format_weather_data, is_binary_content
 
@@ -430,3 +431,50 @@ def read_webpage(url: str) -> str:
         return f"Error fetching the webpage: {str(e)}"
     except Exception as e:
         return f"Error processing the webpage: {str(e)}"
+
+@tool
+def crawl_url(
+    url: str, 
+    max_links: int = 25,
+    same_domain: bool = True
+) -> str:
+    """Extract outlinks from a webpage for further discovery and exploration.
+    
+    This tool is designed to help agents discover related content by extracting
+    hyperlinks from a webpage. It's useful when you need to find additional
+    resources or context related to the current page.
+    """
+    try:
+        # Use Trafilatura's focused crawler to extract links
+        to_visit, known_links = focused_crawler(
+            url, 
+            max_seen_urls=1,  # Only process the initial URL
+            max_known_urls=max_links * 2  # Allow some buffer for filtering
+        )
+        
+        # Filter links based on requirements
+        if same_domain:
+            from urllib.parse import urlparse
+            base_domain = urlparse(url).netloc
+            filtered_links = [
+                link for link in to_visit 
+                if urlparse(link).netloc == base_domain
+            ]
+        else:
+            filtered_links = list(to_visit)
+        
+        # Limit to the requested number of links
+        result_links = filtered_links[:max_links]
+        
+        if not result_links:
+            return "No relevant outlinks found on this page."
+        
+        # Format the results
+        formatted_output = f"Found {len(result_links)} outlinks:\n"
+        for i, link in enumerate(result_links, 1):
+            formatted_output += f"{i}. {link}\n"
+            
+        return formatted_output
+        
+    except Exception as e:
+        return f"Error extracting outlinks: {str(e)}"
