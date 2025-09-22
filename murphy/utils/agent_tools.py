@@ -12,7 +12,7 @@ from serpapi import GoogleSearch
 from typing_extensions import Annotated
 import trafilatura
 
-from .utilityfuncs import format_weather_data
+from .utilityfuncs import format_weather_data, is_binary_content
 
 
 # Agent Tools
@@ -321,7 +321,7 @@ def search_chat_history(
 
 @tool
 def read_webpage(url: str) -> str:
-    """Use when you need to directly read a webpage. Directly enter the URL to retrieve the page's main contents. Use repeatedly when given a direct link/list of URLs.
+    """Use when you need to directly read a webpage or are given a direct link. Retrieves the page's main contents. Use repeatedly when given a direct link/list of URLs.
     """
     try:
         # Validate URL format
@@ -337,6 +337,10 @@ def read_webpage(url: str) -> str:
         # Fetch the webpage
         response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()  # Raise an exception for bad status codes
+        
+        # Check for binary content
+        if is_binary_content(response, url):
+            return "Error: Binary content detected (PDF, image, video, audio, or archive). This tool only processes text-based webpages."
         
         # Try multiple extraction methods
         

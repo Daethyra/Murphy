@@ -27,3 +27,23 @@ def split_message(message, max_length=2000):
         chunks.append(chunk)
     
     return chunks
+
+def is_binary_content(response, url) -> bool:
+    """Quick check for binary content - return True if binary detected"""
+    
+    # 1. Content-Type check (fastest)
+    content_type = response.headers.get('content-type', '').lower()
+    if any(bt in content_type for bt in ['application/pdf', 'image/', 'video/', 'audio/']):
+        return True
+    
+    # 2. File extension check
+    if any(url.lower().endswith(ext) for ext in ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.zip', '.rar', '.exe', '.dmg']):
+        return True
+    
+    # 3. Quick magic bytes check
+    if len(response.content) >= 4:
+        first_bytes = response.content[:4]
+        if first_bytes.startswith(b'%PDF') or first_bytes.startswith(b'PK') or first_bytes.startswith(b'\x89PNG'):
+            return True
+    
+    return False
