@@ -41,7 +41,7 @@ agent = create_agent(
         get_weather, web_search, clock, calculate,
         search_chat_history, read_webpage, crawl_url
         ],
-    prompt=SystemMessage(content="""Use your tools to assist the user(s). 
+    prompt=SystemMessage(content="""You are a pentesting assistant. Use your tools to assist the user(s). 
         
         No emoji's. Give concise, professional, human-like responses."""),
     checkpointer=checkpointer
