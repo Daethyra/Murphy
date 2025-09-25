@@ -435,8 +435,8 @@ def read_webpage(url: str) -> str:
 @tool
 def crawl_url(
     url: str, 
-    max_links: int = 25,
-    same_domain: bool = True
+    max_links: int = 50,
+    same_domain: bool = False
 ) -> str:
     """Extract outlinks from a webpage for further discovery and exploration.
     
@@ -448,7 +448,7 @@ def crawl_url(
         # Use Trafilatura's focused crawler to extract links
         to_visit, known_links = focused_crawler(
             url, 
-            max_seen_urls=1,  # Only process the initial URL
+            max_seen_urls=max_links,  # Only process the initial URL
             max_known_urls=max_links * 2  # Allow some buffer for filtering
         )
         
