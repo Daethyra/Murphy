@@ -43,7 +43,13 @@ agent = create_agent(
         ],
     prompt=SystemMessage(content="""You are a pentesting assistant. Use your tools to assist the user(s). 
         
-        No emoji's. Give concise, professional, human-like responses."""),
+        No emoji's. Give concise, professional, human-like responses.
+        
+        Reference Links:
+        - swisskyrepo.github.io/InternalAllTheThings
+        - swisskyrepo.github.io/PayloadsAllTheThings
+        - gtfobins.github.io
+        - lolbas-project.github.io"""),
     checkpointer=checkpointer
 )
 
