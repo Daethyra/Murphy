@@ -10,45 +10,17 @@ Spider Murphy is a sophisticated Discord AI agent that embodies the iconic netru
 
 ## Features
 
-### 🤖 **AI Personality & Character**
-- **Authentic Spider Murphy persona** from Cyberpunk 2077 lore
-- **Cyberpunk-themed responses** with netrunner jargon and attitude (wow it got old fast!)
-- **Context-aware conversations** with memory persistence
-
-### 🛠️ **Agent Tools & Capabilities**
 - **`get_weather`** - Real-time weather information for any location
 - **`web_search`** - Google AI-powered search with advanced query support
 - **`clock`** - Current date and time retrieval  
 - **`calculate`** - Mathematical expression evaluation with math functions
 - **`search_chat_history`** - Advanced conversation search with boolean operators
 - **`read_webpage`** - Web content extraction using Trafilatura + BeautifulSoup
-
-### 💬 **Smart Conversation Features**
 - **Contextual awareness** - Maintains conversation history and thread context
 - **File attachment processing** - Reads and processes `message.txt` attachments
 - **Reply chain tracking** - Understands message replies and references
 - **Thread-aware responses** - Handles Discord threads intelligently
 - **Message splitting** - Automatically handles Discord's 2000-character limit
-
-## Architecture
-
-### **Core Components**
-```python
-murphy/
-├── chatbot.py              # Main Discord bot implementation
-├── utils/
-│   ├── agent_tools.py      # LangChain tool definitions
-│   └── utilityfuncs.py     # Helper functions and utilities
-└── requirements.txt        # Dependencies
-```
-
-### **Technology Stack**
-- **Discord.py** - Discord bot framework
-- **LangChain** - AI agent orchestration
-- **DeepSeek AI** - Primary language model (deepseek-chat)
-- **Trafilatura** - Web content extraction
-- **BeautifulSoup** - HTML parsing fallback
-- **SerpAPI** - Google search integration
 
 ## Setup & Installation
 
