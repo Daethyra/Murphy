@@ -30,8 +30,8 @@ checkpointer = InMemorySaver()
 model = ChatDeepSeek(
     temperature=0,
     api_key=os.getenv('DEEPSEEK_API_KEY'),
-    model="deepseek-chat",
-    # max_tokens=2048,
+    model="deepseek-reasoner",
+    max_tokens=64000, # doubles max output. we're using the reasoner model, so base output is 32k
 )
 
 # Create agent
@@ -43,7 +43,7 @@ agent = create_agent(
         ],
     prompt=SystemMessage(content="""You are a pentesting assistant. Use your tools to assist the user(s). 
         
-        No emoji's. Give concise, professional, human-like responses.
+        Give concise, professional responses. No emoji's.
         
         Reference Links:
         - swisskyrepo.github.io/InternalAllTheThings
@@ -57,13 +57,13 @@ agent = create_agent(
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
 
-async def load_recent_channel_history(channel, max_tokens=4000) -> List[Dict[str, Any]]:
+async def load_recent_channel_history(channel, max_tokens=32000) -> List[Dict[str, Any]]:
     """Load recent channel history, staying within token limits"""
     history = []
     current_tokens = 0
     
     try:
-        async for message in channel.history(limit=100):
+        async for message in channel.history(limit=3000):
             # Skip empty messages. Add `or message.author.bot` to skip bot msgs
             if not message.content:
                 continue
