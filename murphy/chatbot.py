@@ -57,7 +57,7 @@ agent = create_agent(
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
 
-async def load_recent_channel_history(channel, max_tokens=32000) -> List[Dict[str, Any]]:
+async def load_recent_channel_history(channel, max_tokens=16000) -> List[Dict[str, Any]]:
     """Load recent channel history, staying within token limits"""
     history = []
     current_tokens = 0
